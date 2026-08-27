@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useReports } from '../hooks/useReports';
 import { ReportCard } from '../components/ReportCard/ReportCard';
 import { Loading, EmptyState, ErrorState } from '../components/ui/States';
@@ -15,9 +16,12 @@ export const LostPage = () => {
           <h1 className="text-3xl font-bold text-gray-900">Lost Items</h1>
           <p className="text-gray-500 mt-2">Help others find what they've lost around campus.</p>
         </div>
-        <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">
+        <Link 
+          to="/reports/create?type=LOST"
+          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm inline-block"
+        >
           + Report Lost
-        </button>
+        </Link>
       </div>
 
       {reports.length === 0 ? (

@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth.routes');
 const reportRoutes = require('./routes/report.routes');
 const searchRoutes = require('./routes/search.routes');
 const chatRoutes = require('./routes/chat.routes');
+const moderationRoutes = require('./routes/moderation.routes');
 
 const app = express();
 
@@ -47,6 +48,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/search', searchRoutes);
 app.use('/api/v1/conversations', chatRoutes);
+app.use('/api/v1/moderation', moderationRoutes);
 
 // Health check endpoints
 app.get('/health/live', (req, res) => {

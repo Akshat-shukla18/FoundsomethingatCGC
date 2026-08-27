@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useSearch } from '../hooks/useSearch';
 import { ReportCard } from '../components/ReportCard/ReportCard';
@@ -24,9 +25,12 @@ export const FoundPage = () => {
           <h1 className="text-3xl font-bold text-gray-900">Found Items</h1>
           <p className="text-gray-500 mt-2">Search for items that have been found around campus.</p>
         </div>
-        <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm">
+        <Link 
+          to="/reports/create?type=FOUND"
+          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm inline-block"
+        >
           + Report Found
-        </button>
+        </Link>
       </div>
 
       <SearchBar onSearch={search} />

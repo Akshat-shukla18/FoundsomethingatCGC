@@ -12,6 +12,7 @@ const mongoose = require('mongoose');
 
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
+const LocationShare = require('../models/LocationShare');
 
 let io;
 
@@ -109,6 +110,82 @@ const initWebSocket = (server) => {
 
     socket.on('typing.stop', ({ conversationId }) => {
       socket.to(conversationId).emit('typing.stop', { userId: socket.userId, conversationId });
+    });
+
+    // Location Sharing
+    socket.on('location.start', async ({ conversationId, latitude, longitude }) => {
+      try {
+        const conversation = await Conversation.findOne({ _id: conversationId, participants: socket.userId });
+        if (!conversation || conversation.status !== 'ACTIVE' || !conversation.declarationAccepted) {
+          return socket.emit('error', { message: 'Unauthorized for location sharing' });
+        }
+
+        // 2 hours expiry
+        const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); 
+
+        // Expire any existing active shares for this user in this conversation
+        await LocationShare.updateMany(
+          { conversationId, sharedBy: socket.userId, status: 'ACTIVE' },
+          { $set: { status: 'STOPPED' } }
+        );
+
+        const share = await LocationShare.create({
+          conversationId,
+          sharedBy: socket.userId,
+          latitude,
+          longitude,
+          expiresAt
+        });
+
+        io.to(conversationId).emit('location.start', {
+          locationShareId: share._id,
+          userId: socket.userId,
+          latitude,
+          longitude,
+          expiresAt
+        });
+      } catch (err) {
+        socket.emit('error', { message: 'Failed to start location sharing' });
+      }
+    });
+
+    socket.on('location.update', async ({ locationShareId, conversationId, latitude, longitude }) => {
+      try {
+        const share = await LocationShare.findOne({ _id: locationShareId, sharedBy: socket.userId, status: 'ACTIVE' });
+        
+        if (!share) return;
+        
+        // Server enforced expiry
+        if (share.expiresAt < new Date()) {
+          share.status = 'EXPIRED';
+          await share.save();
+          return socket.emit('error', { code: 'LOCATION_EXPIRED', message: 'Location sharing session expired' });
+        }
+
+        share.latitude = latitude;
+        share.longitude = longitude;
+        await share.save();
+
+        socket.to(conversationId).emit('location.update', {
+          locationShareId,
+          userId: socket.userId,
+          latitude,
+          longitude
+        });
+      } catch (err) {
+        // Silent or small error
+      }
+    });
+
+    socket.on('location.stop', async ({ locationShareId, conversationId }) => {
+      try {
+        const share = await LocationShare.findOne({ _id: locationShareId, sharedBy: socket.userId });
+        if (share) {
+          share.status = 'STOPPED';
+          await share.save();
+          io.to(conversationId).emit('location.stop', { userId: socket.userId, locationShareId });
+        }
+      } catch (err) {}
     });
 
     socket.on('disconnect', () => {
