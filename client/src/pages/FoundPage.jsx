@@ -1,12 +1,21 @@
-import { useReports } from '../hooks/useReports';
+import { useEffect } from 'react';
+import { useSearch } from '../hooks/useSearch';
 import { ReportCard } from '../components/ReportCard/ReportCard';
+import { SearchBar } from '../components/SearchBar/SearchBar';
 import { Loading, EmptyState, ErrorState } from '../components/ui/States';
 
 export const FoundPage = () => {
-  const { reports, loading, loadingMore, error, hasMore, loadMore, refresh } = useReports('FOUND');
+  const { results, loading, loadingMore, error, hasMore, loadMore, search } = useSearch();
 
-  if (loading && reports.length === 0) return <Loading fullscreen />;
-  if (error && reports.length === 0) return <ErrorState message={error} onRetry={refresh} />;
+  // Run empty search on initial mount to load the default feed
+  useEffect(() => {
+    search({});
+  }, [search]);
+
+  if (loading && results.length === 0) return <Loading fullscreen />;
+  
+  // if error on initial load (with no results), show ErrorState
+  if (error && results.length === 0) return <ErrorState message={error} onRetry={() => search({})} />;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -20,12 +29,18 @@ export const FoundPage = () => {
         </button>
       </div>
 
-      {reports.length === 0 ? (
-        <EmptyState message="No found items reported yet." />
+      <SearchBar onSearch={search} />
+
+      {loading && results.length > 0 && (
+        <div className="mb-4 text-gray-500 animate-pulse">Updating results...</div>
+      )}
+
+      {results.length === 0 && !loading ? (
+        <EmptyState message="No found items match your search." />
       ) : (
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {reports.map(report => (
+            {results.map(report => (
               <ReportCard key={report._id} report={report} />
             ))}
           </div>
@@ -46,4 +61,3 @@ export const FoundPage = () => {
     </div>
   );
 };
-

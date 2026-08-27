@@ -45,9 +45,22 @@
 - [x] Generic State components (Loading, EmptyState, ErrorState)
 - [x] Custom hook (`useReports`) for data fetching
 
-## Phase 5: Search (Next step)
-- [ ] Backend: MongoDB Text Search integration
-- [ ] Backend: Date/Time range filtering
-- [ ] Backend: Ranking logic configuration
-- [ ] Frontend: Search Bar and Filters component
-- [ ] Frontend: Found Search Page integration
+## Phase 5: Search
+- [x] Backend: MongoDB Text Search integration via `$text` and aggregate `$meta` score.
+- [x] Backend: Date/Time range filtering
+- [x] Backend: Ranking logic configuration (Recency + Text Score)
+- [x] Frontend: Search Bar and Filters component (`SearchBar.jsx`)
+- [x] Frontend: Found Search Page integration (`FoundPage.jsx` refactored)
+
+## Phase 6: Chat
+- [x] Backend: Conversation & Message Models created
+- [x] Backend: REST Chat endpoints for initialization, blocking, reporting, and declaration
+- [x] Backend: WebSocket server integration (`socket.io`)
+- [x] Backend: WebSocket authorization and typing/messaging events
+- [x] Frontend: `useChat` hook implementing bounded exponential backoff reconnection (`socket.io-client`)
+- [x] Frontend: `ChatInterface` UI component with typing indicators and auto-scroll
+
+## Phase 7: Location Sharing (Next step)
+- [ ] Backend: Location Sharing schemas & tracking
+- [ ] Backend: Temporal expiry enforcement (2-hour limit)
+- [ ] Frontend: Location permission & sharing UI

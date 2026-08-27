@@ -39,7 +39,7 @@ export const useReports = (type = 'LOST') => {
       setReports(prev => [...prev, ...(data.items || [])]);
       setHasMore(data.hasMore);
       setNextCursor(data.nextCursor);
-    } catch (err) {
+    } catch (err) { 
       console.error('Failed to load more reports', err);
     } finally {
       setLoadingMore(false);
