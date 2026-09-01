@@ -45,6 +45,10 @@ export const LandingPage = () => {
         </Link>
         <div className="flex gap-6 items-center text-sm font-medium">
           <Link to="/" className="hover:text-indigo-400 transition-colors">Home</Link>
+          <Link to="/register" className="hover:text-indigo-400 transition-colors">Register</Link>
+          <Link to="/login" className="hover:text-indigo-400 transition-colors">Login</Link>
+          <Link to="/feedback" className="hover:text-indigo-400 transition-colors">Feedback</Link>
+          <Link to="/contact" className="hover:text-indigo-400 transition-colors">Contact</Link>
           {user ? (
             <>
               <Link to="/lost" className="hover:text-indigo-400 transition-colors">Lost</Link>
