@@ -10,7 +10,7 @@
 - [x] Initialize React + Vite client
 - [x] Initialize Node + Express server
 - [x] Configure ESLint, Prettier, and environment validation
-- [x] Setup basic test framework
+- [x] Setup basic test framework 
 - [x] Create basic health endpoints (`GET /health/live`, `GET /health/ready`)
 - [x] Connect MongoDB through a reusable connection layer
 - [x] Run lint, test, build successfully

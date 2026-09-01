@@ -11,6 +11,7 @@ const {
 } = require('../validators/auth.validator');
 const authController = require('../controllers/auth.controller');
 
+router.post('/send-otp', authController.sendOTP);
 router.post('/register', validate(registerSchema), authController.register);
 router.post('/verify-email', validate(verifyEmailSchema), authController.verifyEmail);
 router.post('/login', validate(loginSchema), authController.login);

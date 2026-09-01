@@ -10,7 +10,11 @@ const registerSchema = Joi.object({
   classSection: Joi.string().required().trim().max(20),
   phoneNumber: Joi.string().trim().max(20).optional(),
   telegramId: Joi.string().trim().max(50).optional(),
-  password: Joi.string().required().min(8).max(128)
+  password: Joi.string().required().min(8).max(128),
+  otp: Joi.string().required().length(6).pattern(/^\d+$/).messages({
+    'string.length': 'OTP must be exactly 6 digits',
+    'string.pattern.base': 'OTP must contain only numbers'
+  })
 });
 
 const loginSchema = Joi.object({

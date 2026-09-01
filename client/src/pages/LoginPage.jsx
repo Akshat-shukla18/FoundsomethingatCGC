@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 
 export const LoginPage = () => {
-  const [collegeEmail, setCollegeEmail] = useState('');
+  const location = useLocation();
+  const [collegeEmail, setCollegeEmail] = useState(location.state?.email || '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -28,6 +29,7 @@ export const LoginPage = () => {
       <div className="max-w-md w-full bg-white rounded-xl shadow-sm border border-gray-200 p-8">
         <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">Sign In</h2>
         
+        {location.state?.email && <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">Registration successful! Please sign in with your password.</div>}
         {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>}
 
         <form onSubmit={handleLogin} className="space-y-6">
