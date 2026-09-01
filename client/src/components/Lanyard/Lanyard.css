@@ -1,0 +1,11 @@
+.lanyard-wrapper {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: visible;
+  touch-action: none;
+}
+

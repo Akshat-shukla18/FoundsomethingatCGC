@@ -1,67 +1,142 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useEffect } from 'react';
 import { useSearch } from '../hooks/useSearch';
 import { ReportCard } from '../components/ReportCard/ReportCard';
 import { SearchBar } from '../components/SearchBar/SearchBar';
 import { Loading, EmptyState, ErrorState } from '../components/ui/States';
+import { useTheme } from '../context/ThemeContext';
 
 export const FoundPage = () => {
   const { results, loading, loadingMore, error, hasMore, loadMore, search } = useSearch();
+  const { isDark } = useTheme();
 
-  // Run empty search on initial mount to load the default feed
+  // Animation state
+  const [isMounted, setIsMounted] = useState(false);
+
   useEffect(() => {
+    setIsMounted(true);
     search({});
-  }, [search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading && results.length === 0) return <Loading fullscreen />;
-  
-  // if error on initial load (with no results), show ErrorState
   if (error && results.length === 0) return <ErrorState message={error} onRetry={() => search({})} />;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Found Items</h1>
-          <p className="text-gray-500 mt-2">Search for items that have been found around campus.</p>
-        </div>
-        <Link 
-          to="/reports/create?type=FOUND"
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm inline-block"
-        >
-          + Report Found
-        </Link>
-      </div>
-
-      <SearchBar onSearch={search} />
-
-      {loading && results.length > 0 && (
-        <div className="mb-4 text-gray-500 animate-pulse">Updating results...</div>
-      )}
-
-      {results.length === 0 && !loading ? (
-        <EmptyState message="No found items match your search." />
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {results.map(report => (
-              <ReportCard key={report._id} report={report} />
-            ))}
+    <div 
+      className={`min-h-screen transition-colors duration-700 ease-in-out ${
+        isDark 
+          ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950' 
+          : 'bg-slate-50'
+      }`}
+    >
+      <div 
+        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 transition-all duration-1000 ease-out transform ${
+          isMounted ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
+        }`}
+      >
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6">
+          <div className="space-y-2">
+            <h1 
+              className={`text-4xl sm:text-5xl font-extrabold tracking-tight ${
+                isDark 
+                  ? 'text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-200' 
+                  : 'text-slate-900'
+              }`}
+            >
+              Found Items
+            </h1>
+            <p className={`text-lg font-medium ${isDark ? 'text-indigo-200/60' : 'text-slate-500'}`}>
+              Search for items that have been found around campus.
+            </p>
           </div>
+          
+          <Link 
+            to="/reports/create?type=FOUND"
+            className={`relative group flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+              isDark 
+                ? 'bg-indigo-600 border border-indigo-400/30 shadow-[0_0_20px_rgba(79,70,229,0.4)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)]' 
+                : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg'
+            }`}
+          >
+            <span className="text-xl leading-none">+</span>
+            <span>Report Found</span>
+          </Link>
+        </div>
 
-          {hasMore && (
-            <div className="mt-8 flex justify-center">
-              <button 
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                {loadingMore ? 'Loading...' : 'Load More'}
-              </button>
+        {/* Search Bar Wrapper */}
+        <div className={`mb-8 p-4 rounded-2xl backdrop-blur-md border transition-colors duration-300 ${
+          isDark ? 'bg-slate-900/40 border-slate-800/80 shadow-lg' : 'bg-white shadow-sm border-slate-200'
+        }`}>
+          <SearchBar onSearch={search} />
+        </div>
+
+        {loading && results.length > 0 && (
+          <div className={`mb-6 flex items-center gap-3 animate-pulse font-medium ${isDark ? 'text-indigo-300' : 'text-indigo-600'}`}>
+            <div className="w-2 h-2 rounded-full bg-current animate-bounce"></div>
+            <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+            <div className="w-2 h-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            <span className="ml-2">Updating results...</span>
+          </div>
+        )}
+
+        {/* Content Area */}
+        {results.length === 0 && !loading ? (
+          <div className={`p-8 rounded-2xl border backdrop-blur-md transition-colors ${
+            isDark ? 'border-indigo-900/30 bg-black/20' : 'border-slate-200 bg-white'
+          }`}>
+            <EmptyState message="No found items match your search." />
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {results.map((report, index) => (
+                <div 
+                  key={report._id}
+                  className="group transform transition-all duration-500 ease-out hover:-translate-y-2"
+                  style={{ transitionDelay: `${index * 50}ms` }}
+                >
+                  <div className={`h-full rounded-2xl transition-all duration-300 ${
+                    isDark 
+                      ? 'border border-slate-800 bg-gradient-to-b from-slate-900/80 to-black hover:border-indigo-500/50 hover:shadow-[0_10px_40px_-10px_rgba(79,70,229,0.3)]' 
+                      : 'hover:shadow-xl'
+                  }`}>
+                    <ReportCard report={report} />
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
-        </>
-      )}
+
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="mt-12 flex justify-center">
+                <button 
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  className={`group relative flex items-center justify-center min-w-[200px] px-8 py-3 rounded-full font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 ${
+                    isDark 
+                      ? 'border border-indigo-500/30 text-indigo-300 bg-indigo-950/20 hover:bg-indigo-900/40 hover:border-indigo-400 hover:text-white hover:shadow-[0_0_20px_rgba(79,70,229,0.25)]' 
+                      : 'border border-slate-300 text-slate-700 hover:bg-slate-100 hover:shadow-md'
+                  }`}
+                >
+                  {loadingMore ? (
+                    <span className="flex items-center gap-2">
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Loading...
+                    </span>
+                  ) : (
+                    'Load More Results'
+                  )}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };

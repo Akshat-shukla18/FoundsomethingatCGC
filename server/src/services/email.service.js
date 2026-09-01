@@ -45,14 +45,12 @@ const sendVerificationEmail = async (toEmail, token) => {
   }
 };
 
-const sendPasswordResetEmail = async (toEmail, token) => {
+const sendPasswordResetEmail = async (toEmail, otp) => {
   try {
     if (!process.env.SMTP_HOST) {
-      logger.warn('[SIMULATED EMAIL] SMTP credentials not set. Reset Token: ' + token);
+      logger.warn('[SIMULATED EMAIL] SMTP credentials not set. Reset OTP: ' + otp);
       return;
     }
-
-    const resetLink = `${process.env.CLIENT_URL || 'http://localhost:5174'}/reset-password?token=${token}`;
 
     const mailOptions = {
       from: `"Campus Lost & Found" <${process.env.SMTP_FROM_EMAIL || process.env.SMTP_USER}>`,
@@ -61,13 +59,11 @@ const sendPasswordResetEmail = async (toEmail, token) => {
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #4f46e5;">Password Reset Request</h2>
-          <p>We received a request to reset your password. Click the button below to choose a new password:</p>
-          <div style="text-align: center; margin: 32px 0;">
-            <a href="${resetLink}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Reset Password</a>
+          <p>We received a request to reset your password. Use the following 6-digit OTP code to reset your password:</p>
+          <div style="background-color: #f3f4f6; padding: 20px; text-align: center; border-radius: 8px; margin: 24px 0;">
+            <h1 style="font-size: 36px; letter-spacing: 5px; color: #111827; margin: 0;">${otp}</h1>
           </div>
-          <p>Or copy and paste this link into your browser:</p>
-          <p style="word-break: break-all; color: #4f46e5;">${resetLink}</p>
-          <p>This link will expire in 1 hour.</p>
+          <p>This code will expire in 10 minutes.</p>
           <p style="color: #6b7280; font-size: 14px; margin-top: 32px;">If you did not request a password reset, please ignore this email.</p>
         </div>
       `

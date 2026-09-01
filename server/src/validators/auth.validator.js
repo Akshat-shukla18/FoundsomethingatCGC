@@ -31,7 +31,11 @@ const forgotPasswordSchema = Joi.object({
 });
 
 const resetPasswordSchema = Joi.object({
-  token: Joi.string().required(),
+  collegeEmail: Joi.string().email().required().lowercase().trim(),
+  otp: Joi.string().required().length(6).pattern(/^\d+$/).messages({
+    'string.length': 'OTP must be exactly 6 digits',
+    'string.pattern.base': 'OTP must contain only numbers'
+  }),
   newPassword: Joi.string().required().min(8).max(128)
 });
 

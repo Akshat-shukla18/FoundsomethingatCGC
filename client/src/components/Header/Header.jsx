@@ -1,17 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, User, LogOut, ChevronDown } from 'lucide-react';
+import { Search, User, LogOut, ChevronDown, Sun, Moon } from 'lucide-react';
 import { authService } from '../../services/auth.service';
+import { useTheme } from '../../context/ThemeContext';
 
 export const Header = () => {
   const location = useLocation();
+  const { isDark, toggleTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const profileRef = useRef(null);
 
   const isActive = (path) => location.pathname === path;
 
-  // Fetch current user on mount
+  // Hide header on landing page (it has its own nav)
+  if (location.pathname === '/') return null;
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -24,7 +28,6 @@ export const Header = () => {
     fetchUser();
   }, []);
 
-  // Close popup when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -36,61 +39,72 @@ export const Header = () => {
   }, []);
 
   const handleLogout = async () => {
-    try {
-      await authService.logout();
-      window.location.href = '/';
-    } catch {
-      window.location.href = '/';
-    }
+    try { await authService.logout(); } catch {}
+    window.location.href = '/';
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+    <header className={`sticky top-0 z-50 backdrop-blur-xl border-b ${isDark ? 'bg-black/40 border-white/10' : 'bg-white/60 border-gray-200/50'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center gap-8">
-            <Link to="/" className="font-bold text-xl tracking-tight text-gray-900">
-              Campus<span className="text-lost">Lost</span>&<span className="text-found">Found</span>
+            <Link to={user ? '/home' : '/'} className={`font-bold text-xl tracking-tight ${isDark ? 'text-white' : 'text-gray-900'}`}>
+              Campus<span className="text-red-500">Lost</span>&<span className="text-indigo-400">Found</span>
             </Link>
             
             <nav className="hidden md:flex gap-6">
               <Link 
                 to="/lost" 
-                className={`font-medium text-sm transition-colors ${isActive('/lost') ? 'text-lost' : 'text-gray-500 hover:text-gray-900'}`}
+                className={`font-medium text-sm transition-colors ${isActive('/lost') ? 'text-red-500' : isDark ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
               >
                 Lost
               </Link>
               <Link 
                 to="/found" 
-                className={`font-medium text-sm transition-colors ${isActive('/found') ? 'text-found' : 'text-gray-500 hover:text-gray-900'}`}
+                className={`font-medium text-sm transition-colors ${isActive('/found') ? 'text-indigo-400' : isDark ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
               >
                 Found
+              </Link>
+              <Link 
+                to="/feedback" 
+                className={`font-medium text-sm transition-colors ${isActive('/feedback') ? 'text-indigo-400' : isDark ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
+              >
+                Feedback
+              </Link>
+              <Link 
+                to="/contact" 
+                className={`font-medium text-sm transition-colors ${isActive('/contact') ? 'text-indigo-400' : isDark ? 'text-gray-300 hover:text-white' : 'text-gray-500 hover:text-gray-900'}`}
+              >
+                Contact
               </Link>
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
-            <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors">
-              <Search className="h-5 w-5" />
+          <div className="flex items-center gap-3">
+            {/* Day/Night Toggle */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2 rounded-full transition-colors ${isDark ? 'text-yellow-400 hover:bg-white/10' : 'text-gray-600 hover:bg-gray-200/60'}`}
+              title={isDark ? 'Switch to Day Mode' : 'Switch to Night Mode'}
+            >
+              {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </button>
 
             {user ? (
-              /* Logged-in: show user name with profile popup */
               <div className="relative" ref={profileRef}>
                 <button
                   onClick={() => setShowProfile(!showProfile)}
-                  className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${isDark ? 'border-white/20 hover:bg-white/10 text-white' : 'border-gray-200 hover:bg-gray-100 text-gray-700'}`}
                 >
                   <div className="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-bold">
                     {user.name?.charAt(0).toUpperCase()}
                   </div>
                   <span className="hidden md:block text-sm font-medium max-w-[120px] truncate">{user.name}</span>
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                  <ChevronDown className="h-4 w-4 opacity-60" />
                 </button>
 
                 {showProfile && (
-                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-                    {/* Profile Info */}
+                  <div className="absolute right-0 mt-2 w-72 bg-white text-gray-900 rounded-xl shadow-lg border border-gray-200 py-2 z-50">
                     <div className="px-4 py-3 border-b border-gray-100">
                       <div className="flex items-center gap-3 mb-3">
                         <div className="w-10 h-10 rounded-full bg-indigo-600 text-white flex items-center justify-center text-lg font-bold">
@@ -116,7 +130,6 @@ export const Header = () => {
                         </div>
                       </div>
                     </div>
-                    {/* Logout */}
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -128,8 +141,7 @@ export const Header = () => {
                 )}
               </div>
             ) : (
-              /* Not logged in: show Sign In link */
-              <Link to="/login" className="flex items-center gap-2 p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors md:px-4 md:py-2 md:rounded-lg md:border md:border-gray-200">
+              <Link to="/login" className={`flex items-center gap-2 p-2 rounded-full transition-colors md:px-4 md:py-2 md:rounded-lg md:border ${isDark ? 'text-gray-300 hover:bg-white/10 md:border-white/20' : 'text-gray-500 hover:bg-gray-100 md:border-gray-200'}`}>
                 <User className="h-5 w-5" />
                 <span className="hidden md:block text-sm font-medium">Sign In</span>
               </Link>

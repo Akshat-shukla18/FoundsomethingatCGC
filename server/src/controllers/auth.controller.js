@@ -254,23 +254,23 @@ const forgotPassword = async (req, res, next) => {
     const user = await User.findOne({ collegeEmail });
 
     if (user) {
-      const token = generateRandomToken();
-      const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+      const otp = generateOTP();
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
       await PasswordResetToken.deleteMany({ userId: user._id });
 
       await PasswordResetToken.create({
         userId: user._id,
-        token,
+        token: otp,
         expiresAt
       });
 
-      sendPasswordResetEmail(user.collegeEmail, token);
+      sendPasswordResetEmail(user.collegeEmail, otp);
     }
 
     res.status(200).json({
       success: true,
-      data: { message: 'If the account is eligible, instructions have been sent.' }
+      data: { message: 'If the account exists, a password reset OTP has been sent to your email.' }
     });
   } catch (error) {
     next(error);
@@ -279,18 +279,26 @@ const forgotPassword = async (req, res, next) => {
 
 const resetPassword = async (req, res, next) => {
   try {
-    const { token, newPassword } = req.body;
+    const { collegeEmail, otp, newPassword } = req.body;
 
-    const resetRecord = await PasswordResetToken.findOne({ token });
+    const user = await User.findOne({ collegeEmail });
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid email or OTP.' }
+      });
+    }
+
+    const resetRecord = await PasswordResetToken.findOne({ userId: user._id, token: otp });
     if (!resetRecord || resetRecord.expiresAt < new Date()) {
       return res.status(400).json({
         success: false,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid or expired password reset token.' }
+        error: { code: 'VALIDATION_ERROR', message: 'Invalid or expired OTP. Please request a new one.' }
       });
     }
 
     const passwordHash = await argon2.hash(newPassword, { type: argon2.argon2id });
-    await User.findByIdAndUpdate(resetRecord.userId, { passwordHash });
+    await User.findByIdAndUpdate(user._id, { passwordHash });
     await PasswordResetToken.deleteOne({ _id: resetRecord._id });
 
     res.status(200).json({
