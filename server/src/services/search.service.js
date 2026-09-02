@@ -103,6 +103,59 @@ const searchFoundReports = async (params) => {
   };
 };
 
+const autobotSearchFoundReports = async (queryText, userId) => {
+  const cleanQuery = queryText.trim();
+  const regex = new RegExp(cleanQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+
+  // Search ACTIVE found reports matching the query
+  const matches = await Report.find({
+    reportType: 'FOUND',
+    status: 'ACTIVE',
+    $or: [
+      { itemName: regex },
+      { description: regex },
+      { category: regex },
+      { color: regex },
+      { brand: regex },
+      { 'location.label': regex },
+      { normalizedItemName: regex },
+      { normalizedSearchText: regex }
+    ]
+  })
+  .sort({ createdAt: -1 })
+  .limit(10)
+  .populate('createdBy', 'name collegeEmail department');
+
+  const count = matches.length;
+  const embeddedNames = Array.from(new Set(matches.map(m => m.itemName)));
+
+  let replyText = '';
+  if (count === 0) {
+    replyText = `I searched all recent found item posts for "${cleanQuery}", but couldn't find an exact match yet. Somebody might post it soon, or you can create a "Lost" report so others can contact you if found!`;
+  } else if (count === 1) {
+    replyText = `Great news! I found 1 matching post for "${cleanQuery}": "${matches[0].itemName}" found at ${matches[0].location?.label || 'campus'}. Check the details below!`;
+  } else {
+    replyText = `I found ${count} matching posts for "${cleanQuery}" (including ${embeddedNames.slice(0, 3).map(n => `"${n}"`).join(', ')}). Check them out below:`;
+  }
+
+  return {
+    query: cleanQuery,
+    matchCount: count,
+    replyText,
+    embeddedNames,
+    items: matches.map(item => ({
+      _id: item._id,
+      itemName: item.itemName,
+      description: item.description,
+      location: item.location?.label || 'Campus',
+      eventAt: item.eventAt,
+      createdAt: item.createdAt,
+      images: item.images || []
+    }))
+  };
+};
+
 module.exports = {
-  searchFoundReports
+  searchFoundReports,
+  autobotSearchFoundReports
 };

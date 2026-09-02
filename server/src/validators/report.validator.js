@@ -14,8 +14,8 @@ const createReportSchema = Joi.object({
   timePrecision: Joi.string().valid('EXACT', 'APPROXIMATE', 'UNKNOWN').default('APPROXIMATE'),
   additionalInfo: Joi.string().max(500).optional().allow(''),
   images: Joi.array().items(Joi.object({
-    url: Joi.string().uri().required(),
-    objectKey: Joi.string().required(),
+    url: Joi.string().required(),
+    objectKey: Joi.string().optional().default('local_upload'),
     mimeType: Joi.string().optional(),
     size: Joi.number().optional(),
     width: Joi.number().optional(),
@@ -45,8 +45,8 @@ const updateReportSchema = Joi.object({
   timePrecision: Joi.string().valid('EXACT', 'APPROXIMATE', 'UNKNOWN').optional(),
   additionalInfo: Joi.string().max(500).optional().allow(''),
   images: Joi.array().items(Joi.object({
-    url: Joi.string().uri().required(),
-    objectKey: Joi.string().required(),
+    url: Joi.string().required(),
+    objectKey: Joi.string().optional().default('local_upload'),
     mimeType: Joi.string().optional(),
     size: Joi.number().optional(),
     width: Joi.number().optional(),

@@ -5,17 +5,30 @@ import { ReportCard } from '../components/ReportCard/ReportCard';
 import { SearchBar } from '../components/SearchBar/SearchBar';
 import { Loading, EmptyState, ErrorState } from '../components/ui/States';
 import { useTheme } from '../context/ThemeContext';
+import { AutobotWidget } from '../components/Autobot/AutobotWidget';
+import { authService } from '../services/auth.service';
 
 export const FoundPage = () => {
   const { results, loading, loadingMore, error, hasMore, loadMore, search } = useSearch();
   const { isDark } = useTheme();
 
-  // Animation state
+  // Animation & Auth user state
   const [isMounted, setIsMounted] = useState(false);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     setIsMounted(true);
     search({});
+
+    const fetchUser = async () => {
+      try {
+        const data = await authService.getMe();
+        setUser(data?.user || data);
+      } catch {
+        setUser(null);
+      }
+    };
+    fetchUser();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -137,6 +150,9 @@ export const FoundPage = () => {
           </>
         )}
       </div>
+
+      {/* Sticky Autobot Assistant Widget for Logged-In Users */}
+      <AutobotWidget user={user} />
     </div>
   );
 };

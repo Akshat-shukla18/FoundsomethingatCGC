@@ -46,6 +46,28 @@ const searchFound = async (req, res, next) => {
   }
 };
 
+const autobotQuery = async (req, res, next) => {
+  try {
+    const { query } = req.body;
+    if (!query || typeof query !== 'string' || query.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_QUERY', message: 'Please provide a search query for Autobot.' }
+      });
+    }
+
+    const result = await searchService.autobotSearchFoundReports(query.trim(), req.session.userId);
+
+    res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
-  searchFound
+  searchFound,
+  autobotQuery
 };

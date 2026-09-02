@@ -13,9 +13,7 @@ export const Header = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  // Hide header on landing page (it has its own nav)
-  if (location.pathname === '/') return null;
-
+  // ALL hooks MUST be defined before any early returns per React Rules of Hooks
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -42,6 +40,9 @@ export const Header = () => {
     try { await authService.logout(); } catch {}
     window.location.href = '/';
   };
+
+  // Hide header on landing page (it has its own transparent nav)
+  if (location.pathname === '/') return null;
 
   return (
     <header className={`sticky top-0 z-50 backdrop-blur-xl border-b ${isDark ? 'bg-black/40 border-white/10' : 'bg-white/60 border-gray-200/50'}`}>
