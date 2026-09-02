@@ -23,7 +23,8 @@ const createReport = async (req, res, next) => {
     data.normalizedSearchText = data.description.toLowerCase();
 
     // 3. Create Report
-    const report = await Report.create(data);
+    let report = await Report.create(data);
+    report = await report.populate('createdBy', 'name collegeEmail department rollNumber classSection');
 
     const responseStatus = 201;
     const responseBody = {

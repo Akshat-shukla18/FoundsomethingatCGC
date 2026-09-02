@@ -33,33 +33,72 @@ export const LostPage = () => {
         }`}
       >
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-6">
           <div className="space-y-2">
             <h1 
               className={`text-4xl sm:text-5xl font-extrabold tracking-tight ${
                 isDark 
-                  ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-rose-200' 
+                  ? 'text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-rose-300' 
                   : 'text-slate-900'
               }`}
             >
               Lost Items
             </h1>
-            <p className={`text-lg font-medium ${isDark ? 'text-red-200/60' : 'text-slate-500'}`}>
-              Help others find what they've lost around campus.
+            <p className={`text-lg font-medium ${isDark ? 'text-slate-300/80' : 'text-slate-600'}`}>
+              Find what you've lost and help others. Your search starts here.
             </p>
           </div>
           
           <Link 
             to="/reports/create?type=LOST"
-            className={`relative group flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all duration-300 transform hover:scale-105 active:scale-95 ${
-              isDark 
-                ? 'bg-red-600/90 border border-red-400/30 shadow-[0_0_20px_rgba(220,38,38,0.4)] hover:shadow-[0_0_30px_rgba(248,113,113,0.6)]' 
-                : 'bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/20'
-            }`}
+            className="relative group flex items-center justify-center gap-2 px-6 py-3 rounded-full font-bold text-white transition-all duration-300 transform hover:scale-105 active:scale-95 bg-red-600 hover:bg-red-700 shadow-lg shadow-red-600/30"
           >
             <span className="text-xl leading-none">+</span>
             <span>Report Lost</span>
           </Link>
+        </div>
+
+        {/* "We're here to help" Banner Card Section */}
+        <div className={`mb-10 p-6 sm:p-8 rounded-3xl border backdrop-blur-xl transition-all duration-500 flex flex-col md:flex-row justify-between items-center gap-6 ${
+          isDark 
+            ? 'bg-slate-900/80 border-red-500/30 shadow-[0_0_35px_rgba(239,68,68,0.15)] text-white' 
+            : 'bg-white/90 border-red-200 shadow-xl shadow-red-500/5 text-slate-900'
+        }`}>
+          <div className="space-y-3 max-w-2xl text-left">
+            <h2 className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              We're here to help.
+            </h2>
+            <p className={`text-sm sm:text-base leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+              Really sorry for your loss. We will try our best. Just make a report with a clear description, and we will notify you.
+            </p>
+          </div>
+
+          {/* Spotlight Box SVG Graphic / Illustration Space */}
+          <div className="shrink-0 relative flex items-center justify-center">
+            <svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-36 h-36 shrink-0 drop-shadow-md">
+              {/* Spotlight beam */}
+              <polygon points="120,5 60,105 130,105" fill="url(#spotlightGrad)" opacity="0.35" />
+              <ellipse cx="120" cy="5" rx="14" ry="7" fill="#FDE047" opacity="0.85" />
+              <path d="M110 5 L120 -10 L130 5" stroke="#94A3B8" strokeWidth="4" strokeLinecap="round" />
+
+              <defs>
+                <linearGradient id="spotlightGrad" x1="120" y1="5" x2="95" y2="105" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#FDE047" stopOpacity="0.8" />
+                  <stop offset="1" stopColor="#FDE047" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+
+              {/* Box 3D Isometric */}
+              <path d="M45 70 L95 55 L145 70 L95 85 Z" fill="#334155" />
+              <path d="M45 70 L30 50 L80 35 L95 55 Z" fill="#475569" />
+              <path d="M145 70 L160 50 L110 35 L95 55 Z" fill="#475569" />
+              <path d="M45 70 L95 85 L95 125 L45 110 Z" fill="#1E293B" />
+              <path d="M95 85 L145 70 L145 110 L95 125 Z" fill="#0F172A" />
+
+              {/* "LOST" label */}
+              <text x="54" y="98" fill="#F87171" fontSize="13" fontWeight="900" fontFamily="sans-serif" letterSpacing="1.5" transform="skewY(12)">LOST</text>
+            </svg>
+          </div>
         </div>
 
         {/* Content Area */}
