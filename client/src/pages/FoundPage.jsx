@@ -79,11 +79,15 @@ export const FoundPage = () => {
         </div>
 
         {/* Search Bar Wrapper */}
-        <div className={`mb-8 p-4 rounded-2xl backdrop-blur-md border transition-colors duration-300 ${
-          isDark ? 'bg-slate-900/40 border-slate-800/80 shadow-lg' : 'bg-white shadow-sm border-slate-200'
-        }`}>
-          <SearchBar onSearch={search} />
-        </div>
+       <div 
+  className={`mb-8 p-3 md:p-4 rounded-3xl backdrop-blur-xl border transition-all duration-300 ${
+    isDark 
+      ? 'bg-slate-900/60 border-slate-800/60 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]' 
+      : 'bg-white/70 border-slate-200/60 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)]'
+  }`}
+>
+  <SearchBar onSearch={search} />
+</div>
 
         {loading && results.length > 0 && (
           <div className={`mb-6 flex items-center gap-3 animate-pulse font-medium ${isDark ? 'text-indigo-300' : 'text-indigo-600'}`}>
