@@ -1,8 +1,24 @@
-import { MapPin, Clock, Building, CheckCircle2, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MapPin, Clock, Building, CheckCircle2, Check, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
+import { authService } from '../../services/auth.service';
 
 export const ReportCard = ({ report, isOwner = false, onMarkResolved = null }) => {
   const { isDark } = useTheme();
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(null);
+
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const data = await authService.getMe();
+        setCurrentUser(data?.user || data);
+      } catch {}
+    };
+    fetchMe();
+  }, []);
+
   const { 
     _id,
     itemName, 
@@ -29,6 +45,14 @@ export const ReportCard = ({ report, isOwner = false, onMarkResolved = null }) =
   const senderName = createdBy?.name || 'Anonymous Student';
   const senderDept = createdBy?.department || 'Campus Student';
   const senderInitial = senderName.charAt(0).toUpperCase();
+  const senderId = createdBy?._id || createdBy;
+
+  const isMyOwnPost = isOwner || (currentUser && (senderId?.toString() === currentUser._id?.toString() || (createdBy?.collegeEmail && createdBy.collegeEmail === currentUser.collegeEmail)));
+
+  const handleContact = () => {
+    if (!senderId || isMyOwnPost) return;
+    navigate(`/chat?reportId=${_id}&recipientId=${senderId}&itemName=${encodeURIComponent(itemName)}`);
+  };
 
   return (
     <div className={`rounded-2xl border shadow-sm overflow-hidden transition-all backdrop-blur-md flex flex-col justify-between ${
@@ -120,8 +144,18 @@ export const ReportCard = ({ report, isOwner = false, onMarkResolved = null }) =
 
         {/* Actions */}
         <div className="mt-5 space-y-2">
+          {/* Contact Button if not my own post and not resolved */}
+          {!isMyOwnPost && !isResolved && (
+            <button
+              onClick={handleContact}
+              className="w-full py-2.5 px-3 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600 text-white transition-all transform active:scale-95 shadow-md shadow-indigo-500/20 cursor-pointer"
+            >
+              <MessageSquare className="h-4 w-4" /> Contact {isLost ? 'Reporter' : 'Founder'}
+            </button>
+          )}
+
           {/* Mark as Resolved option for owner */}
-          {isOwner && !isResolved && onMarkResolved && (
+          {isMyOwnPost && !isResolved && onMarkResolved && (
             <button
               onClick={() => onMarkResolved(_id)}
               className="w-full py-2.5 px-3 rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white transition-all transform active:scale-95 shadow-md hover:shadow-emerald-600/30 cursor-pointer"

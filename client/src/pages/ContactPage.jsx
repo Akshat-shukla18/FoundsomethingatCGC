@@ -16,7 +16,7 @@ export const ContactPage = () => {
         <div className={`p-6 rounded-lg mb-8 ${isDark ? 'bg-indigo-950/60 border border-indigo-500/20' : 'bg-indigo-50'}`}>
           <p className={`font-semibold mb-2 ${isDark ? 'text-indigo-300' : 'text-indigo-900'}`}>Admin Email:</p>
           <a href="mailto:ashukla20062006@gmail.com" className="text-xl font-mono text-indigo-400 hover:underline">
-            ashukla20062006@gmail.com
+            akweb2025@gmail.com
           </a>
         </div>
         <Link to="/" className="text-indigo-400 font-medium hover:underline">

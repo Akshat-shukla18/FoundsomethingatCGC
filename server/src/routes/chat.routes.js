@@ -1,22 +1,22 @@
 const express = require('express');
 const router = express.Router();
-const chatController = require('../controllers/chat.controller');
 const { requireAuth } = require('../middleware/auth.middleware');
-const Joi = require('joi');
-const validate = require('../middleware/validate.middleware');
+const chatController = require('../controllers/chat.controller');
 
-const createConversationSchema = Joi.object({
-  reportId: Joi.string().required()
-});
+// Unread badge summary for navbar indicator
+router.get('/unread-summary', requireAuth, chatController.getUnreadSummary);
 
-router.use(requireAuth);
+// Conversations management
+router.get('/', requireAuth, chatController.getConversations);
+router.post('/initiate', requireAuth, chatController.initiateConversation);
 
-router.post('/', validate(createConversationSchema), chatController.createConversation);
-router.get('/', chatController.getConversations);
-router.get('/:id/messages', chatController.getMessages);
-router.post('/:id/declaration', chatController.acceptDeclaration);
-router.post('/:id/block', chatController.blockConversation);
-router.post('/:id/report', chatController.reportConversation);
+// Individual conversation actions
+router.patch('/:id/accept', requireAuth, chatController.acceptConversation);
+router.patch('/:id/reject', requireAuth, chatController.rejectConversation);
+router.patch('/:id/read', requireAuth, chatController.markAsRead);
+
+// Messages inside conversation
+router.get('/:id/messages', requireAuth, chatController.getMessages);
+router.post('/:id/messages', requireAuth, chatController.sendMessage);
 
 module.exports = router;
-

@@ -11,6 +11,7 @@ import { LandingPage } from './pages/LandingPage';
 import { ContactPage } from './pages/ContactPage';
 import { FeedbackPage } from './pages/FeedbackPage';
 import { HomePage } from './pages/HomePage';
+import { ChatView } from './pages/ChatView';
 import { PageTransition } from './components/PageTransition/PageTransition';
 import LightRays from './components/LightRays/LightRays';
 
@@ -23,6 +24,7 @@ const AnimatedRoutes = () => {
       <Route path="/home" element={<PageTransition><HomePage /></PageTransition>} />
       <Route path="/lost" element={<PageTransition><LostPage /></PageTransition>} />
       <Route path="/found" element={<PageTransition><FoundPage /></PageTransition>} />
+      <Route path="/chat" element={<PageTransition><ChatView /></PageTransition>} />
       <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
       <Route path="/register" element={<PageTransition><RegisterPage /></PageTransition>} />
       <Route path="/contact" element={<PageTransition><ContactPage /></PageTransition>} />

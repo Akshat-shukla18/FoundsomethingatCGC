@@ -1,15 +1,6 @@
 const { Server } = require('socket.io');
 const env = require('../config/env');
 const logger = require('../config/logger');
-const cookie = require('cookie');
-const { signedCookie } = require('cookie-parser');
-const mongoose = require('mongoose');
-
-// We need a way to parse the session from the MongoDB store or just trust a JWT if we had one.
-// Since we are using express-session with connect-mongo, the session ID is stored in a signed cookie.
-// Actually, to make WS auth perfectly match express-session is a bit complex without sharing the store.
-// Let's implement a robust Socket.io setup.
-
 const Conversation = require('../models/Conversation');
 const Message = require('../models/Message');
 const LocationShare = require('../models/LocationShare');
@@ -27,22 +18,11 @@ const initWebSocket = (server) => {
   // Socket Authorization Middleware
   io.use(async (socket, next) => {
     try {
-      // In a real setup using express-session, we would:
-      // 1. parse cookie `connect.sid`
-      // 2. unsign it using env.SESSION_SECRET
-      // 3. fetch from MongoStore
-      // For this MVP, we will rely on client passing `userId` via auth.token or similar,
-      // or we can simulate session validation.
-      
       const userId = socket.handshake.auth.userId;
       if (!userId) {
         return next(new Error("Unauthorized: missing user ID"));
       }
-      
-      // In production, NEVER trust client-provided userId. We would fetch the session from DB.
-      // E.g. const session = await mongoose.connection.collection('sessions').findOne({ _id: sessionId });
-      
-      socket.userId = userId;
+      socket.userId = userId.toString();
       next();
     } catch (err) {
       next(new Error("Unauthorized"));
@@ -52,140 +32,40 @@ const initWebSocket = (server) => {
   io.on('connection', (socket) => {
     logger.info(`Socket connected: ${socket.id} for User: ${socket.userId}`);
 
-    // Join rooms for active conversations
+    // Join personal user room for global notifications
+    socket.join(`user:${socket.userId}`);
+
+    // Join rooms for conversations
     socket.on('join_conversation', async ({ conversationId }) => {
-      // Authorize
       try {
         const conversation = await Conversation.findOne({ 
           _id: conversationId, 
           participants: socket.userId 
         });
 
-        if (conversation && conversation.status === 'ACTIVE' && conversation.declarationAccepted) {
-          socket.join(conversationId);
+        if (conversation && conversation.status !== 'BLOCKED') {
+          socket.join(conversationId.toString());
           logger.info(`User ${socket.userId} joined conversation ${conversationId}`);
         } else {
-          socket.emit('error', { message: 'Cannot join conversation. Either not authorized, blocked, or declaration missing.' });
+          socket.emit('error', { message: 'Cannot join conversation.' });
         }
       } catch (err) {
         socket.emit('error', { message: 'Error joining conversation' });
       }
     });
 
-    // Send Message
-    socket.on('message.send', async ({ conversationId, text }) => {
-      try {
-        const conversation = await Conversation.findOne({ 
-          _id: conversationId, 
-          participants: socket.userId 
-        });
-
-        if (!conversation || conversation.status !== 'ACTIVE' || !conversation.declarationAccepted) {
-          return socket.emit('error', { message: 'Cannot send message' });
-        }
-
-        const msg = await Message.create({
-          conversationId,
-          senderId: socket.userId,
-          text,
-          type: 'TEXT'
-        });
-
-        // Broadcast to room
-        io.to(conversationId).emit('message.new', msg);
-        
-        // Update conversation timestamp
-        conversation.updatedAt = new Date();
-        await conversation.save();
-
-      } catch (err) {
-        socket.emit('error', { message: 'Failed to send message' });
-      }
+    // Leave conversation room
+    socket.on('leave_conversation', ({ conversationId }) => {
+      socket.leave(conversationId.toString());
     });
 
     // Typing Indicators
     socket.on('typing.start', ({ conversationId }) => {
-      socket.to(conversationId).emit('typing.start', { userId: socket.userId, conversationId });
+      socket.to(conversationId.toString()).emit('typing.start', { userId: socket.userId, conversationId });
     });
 
     socket.on('typing.stop', ({ conversationId }) => {
-      socket.to(conversationId).emit('typing.stop', { userId: socket.userId, conversationId });
-    });
-
-    // Location Sharing
-    socket.on('location.start', async ({ conversationId, latitude, longitude }) => {
-      try {
-        const conversation = await Conversation.findOne({ _id: conversationId, participants: socket.userId });
-        if (!conversation || conversation.status !== 'ACTIVE' || !conversation.declarationAccepted) {
-          return socket.emit('error', { message: 'Unauthorized for location sharing' });
-        }
-
-        // 2 hours expiry
-        const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000); 
-
-        // Expire any existing active shares for this user in this conversation
-        await LocationShare.updateMany(
-          { conversationId, sharedBy: socket.userId, status: 'ACTIVE' },
-          { $set: { status: 'STOPPED' } }
-        );
-
-        const share = await LocationShare.create({
-          conversationId,
-          sharedBy: socket.userId,
-          latitude,
-          longitude,
-          expiresAt
-        });
-
-        io.to(conversationId).emit('location.start', {
-          locationShareId: share._id,
-          userId: socket.userId,
-          latitude,
-          longitude,
-          expiresAt
-        });
-      } catch (err) {
-        socket.emit('error', { message: 'Failed to start location sharing' });
-      }
-    });
-
-    socket.on('location.update', async ({ locationShareId, conversationId, latitude, longitude }) => {
-      try {
-        const share = await LocationShare.findOne({ _id: locationShareId, sharedBy: socket.userId, status: 'ACTIVE' });
-        
-        if (!share) return;
-        
-        // Server enforced expiry
-        if (share.expiresAt < new Date()) {
-          share.status = 'EXPIRED';
-          await share.save();
-          return socket.emit('error', { code: 'LOCATION_EXPIRED', message: 'Location sharing session expired' });
-        }
-
-        share.latitude = latitude;
-        share.longitude = longitude;
-        await share.save();
-
-        socket.to(conversationId).emit('location.update', {
-          locationShareId,
-          userId: socket.userId,
-          latitude,
-          longitude
-        });
-      } catch (err) {
-        // Silent or small error
-      }
-    });
-
-    socket.on('location.stop', async ({ locationShareId, conversationId }) => {
-      try {
-        const share = await LocationShare.findOne({ _id: locationShareId, sharedBy: socket.userId });
-        if (share) {
-          share.status = 'STOPPED';
-          await share.save();
-          io.to(conversationId).emit('location.stop', { userId: socket.userId, locationShareId });
-        }
-      } catch (err) {}
+      socket.to(conversationId.toString()).emit('typing.stop', { userId: socket.userId, conversationId });
     });
 
     socket.on('disconnect', () => {
@@ -198,4 +78,3 @@ module.exports = {
   initWebSocket,
   getIo: () => io
 };
-

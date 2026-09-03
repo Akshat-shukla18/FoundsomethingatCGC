@@ -52,13 +52,14 @@ export const LandingPage = () => {
           </Link>
           
           {/* Interactive 3D Lanyard hanging under the logo with custom uploaded image face */}
-          <div className="w-48 h-64 mt-2 -ml-6 relative overflow-visible z-40">
+          <div className="w-56 h-80 mt-2 -ml-6 relative overflow-visible z-40">
             <Lanyard 
               position={[0, 0, 20]} 
               gravity={[0, -40, 0]} 
               frontImage={lanyardCardFace}
               backImage={lanyardCardFace}
               imageFit="cover"
+              lanyardWidth={1.8}
             />
           </div>
         </div>
