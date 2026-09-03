@@ -5,57 +5,65 @@ import { ReportCard } from '../components/ReportCard/ReportCard';
 import { Loading, EmptyState, ErrorState } from '../components/ui/States';
 import { useTheme } from '../context/ThemeContext';
 import { authService } from '../services/auth.service';
+import { reportService } from '../services/report.service';
 import { Package, UserCheck, PlusCircle } from 'lucide-react';
 
 export const LostPage = () => {
   const { reports, loading, loadingMore, error, hasMore, loadMore, refresh } = useReports('LOST');
   const { isDark } = useTheme();
   
-  // State for tabs, user, and entry animation
+  // State for tabs, user, and my reports list
   const [activeTab, setActiveTab] = useState('ALL'); // 'ALL' | 'MY_REPORTS'
   const [currentUser, setCurrentUser] = useState(null);
-  const [isMounted, setIsMounted] = useState(false);
+  const [myReports, setMyReports] = useState([]);
+  const [loadingMyReports, setLoadingMyReports] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-    const fetchUser = async () => {
+    const fetchUserAndMyReports = async () => {
       try {
         const data = await authService.getMe();
-        setCurrentUser(data?.user || data);
+        const user = data?.user || data;
+        setCurrentUser(user);
+        if (user) {
+          fetchMyReports();
+        }
       } catch {
         setCurrentUser(null);
       }
     };
-    fetchUser();
+    fetchUserAndMyReports();
   }, []);
 
-  if (loading && reports.length === 0) return <Loading fullscreen />;
-  if (error && reports.length === 0) return <ErrorState message={error} onRetry={refresh} />;
-
-  // Filter items for "Your Reports"
-  const isMyReport = (report) => {
-    if (!currentUser) return false;
-    const creatorId = report.createdBy?._id || report.createdBy;
-    const creatorEmail = report.createdBy?.collegeEmail;
-    return creatorId === currentUser._id || (creatorEmail && creatorEmail === currentUser.collegeEmail);
+  const fetchMyReports = async () => {
+    try {
+      setLoadingMyReports(true);
+      const res = await reportService.getMyReports('LOST');
+      setMyReports(res.items || []);
+    } catch {
+      // fallback
+    } finally {
+      setLoadingMyReports(false);
+    }
   };
 
-  const myReportsList = reports.filter(isMyReport);
-  const displayedReports = activeTab === 'MY_REPORTS' ? myReportsList : reports;
+  const handleMarkResolved = async (reportId) => {
+    try {
+      setMyReports(prev => prev.map(r => r._id === reportId ? { ...r, status: 'RESOLVED' } : r));
+      await reportService.markResolved(reportId);
+      refresh();
+      fetchMyReports();
+    } catch (err) {
+      alert(err.message || 'Failed to mark report as resolved');
+      fetchMyReports();
+    }
+  };
+
+  const publicActiveReports = reports.filter(r => r.status === 'ACTIVE' || !r.status);
+  const displayedReports = activeTab === 'MY_REPORTS' ? myReports : publicActiveReports;
 
   return (
-    <div 
-      className={`min-h-screen transition-colors duration-700 ease-in-out ${
-        isDark 
-          ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-red-950/80' 
-          : 'bg-gradient-to-br from-slate-50 to-red-50/40'
-      }`}
-    >
-      <div 
-        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 transition-all duration-1000 ease-out transform ${
-          isMounted ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
-        }`}
-      >
+    <div className="min-h-screen bg-transparent">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-6">
           <div className="space-y-2">
@@ -97,7 +105,7 @@ export const LostPage = () => {
             </p>
           </div>
 
-          {/* Spotlight Box SVG Graphic / Illustration Space */}
+          {/* Spotlight Box SVG Graphic */}
           <div className="shrink-0 relative flex items-center justify-center">
             <svg viewBox="0 0 160 140" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-36 h-36 shrink-0 drop-shadow-md">
               <polygon points="120,5 60,105 130,105" fill="url(#spotlightGrad)" opacity="0.35" />
@@ -126,7 +134,7 @@ export const LostPage = () => {
         <div className="flex flex-wrap items-center gap-3 mb-8 border-b border-gray-500/20 pb-4">
           <button
             onClick={() => setActiveTab('ALL')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm transition-all duration-300 ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm transition-all duration-300 cursor-pointer ${
               activeTab === 'ALL'
                 ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
                 : isDark
@@ -139,14 +147,17 @@ export const LostPage = () => {
             <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
               activeTab === 'ALL' ? 'bg-white/20 text-white' : 'bg-red-500/10 text-red-500'
             }`}>
-              {reports.length}
+              {publicActiveReports.length}
             </span>
           </button>
 
           {currentUser && (
             <button
-              onClick={() => setActiveTab('MY_REPORTS')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm transition-all duration-300 ${
+              onClick={() => {
+                setActiveTab('MY_REPORTS');
+                fetchMyReports();
+              }}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm transition-all duration-300 cursor-pointer ${
                 activeTab === 'MY_REPORTS'
                   ? 'bg-red-600 text-white shadow-lg shadow-red-600/30 scale-105'
                   : isDark
@@ -159,14 +170,18 @@ export const LostPage = () => {
               <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                 activeTab === 'MY_REPORTS' ? 'bg-white/20 text-white' : 'bg-red-500/10 text-red-500'
               }`}>
-                {myReportsList.length}
+                {myReports.length}
               </span>
             </button>
           )}
         </div>
 
         {/* Content Area */}
-        {displayedReports.length === 0 ? (
+        {loading && reports.length === 0 ? (
+          <Loading />
+        ) : error && reports.length === 0 ? (
+          <ErrorState message={error} onRetry={refresh} />
+        ) : displayedReports.length === 0 ? (
           <div className={`p-10 rounded-3xl border backdrop-blur-md text-center transition-colors ${
             isDark ? 'border-red-900/30 bg-black/20 text-slate-300' : 'border-slate-200 bg-white text-slate-700'
           }`}>
@@ -189,18 +204,21 @@ export const LostPage = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {displayedReports.map((report, index) => (
+              {displayedReports.map((report) => (
                 <div 
                   key={report._id}
-                  className="group transform transition-all duration-500 ease-out hover:-translate-y-2"
-                  style={{ transitionDelay: `${index * 50}ms` }}
+                  className="group transform transition-all duration-300 hover:-translate-y-1.5"
                 >
                   <div className={`h-full rounded-2xl transition-all duration-300 ${
                     isDark 
                       ? 'border border-slate-800 bg-gradient-to-b from-slate-900/80 to-black hover:border-red-500/50 hover:shadow-[0_10px_40px_-10px_rgba(239,68,68,0.3)]' 
                       : 'hover:shadow-xl hover:shadow-red-500/10'
                   }`}>
-                    <ReportCard report={report} />
+                    <ReportCard 
+                      report={report} 
+                      isOwner={activeTab === 'MY_REPORTS'} 
+                      onMarkResolved={handleMarkResolved} 
+                    />
                   </div>
                 </div>
               ))}
@@ -212,7 +230,7 @@ export const LostPage = () => {
                 <button 
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className={`group relative flex items-center justify-center min-w-[200px] px-8 py-3 rounded-full font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 ${
+                  className={`group relative flex items-center justify-center min-w-[200px] px-8 py-3 rounded-full font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 cursor-pointer ${
                     isDark 
                       ? 'border border-red-500/30 text-red-300 bg-red-950/20 hover:bg-red-900/40 hover:border-red-400 hover:text-white hover:shadow-[0_0_20px_rgba(239,68,68,0.25)]' 
                       : 'border border-slate-300 text-slate-700 hover:bg-red-50 hover:text-red-700 hover:border-red-200 hover:shadow-md'

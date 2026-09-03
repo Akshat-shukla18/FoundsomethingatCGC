@@ -11,6 +11,7 @@ router.post('/', requireAuth, validate(createReportSchema), reportController.cre
 // Report Feeds
 router.get('/lost', reportController.getLostReports);
 router.get('/found', reportController.getFoundReports);
+router.get('/my', requireAuth, reportController.getMyReports);
 
 // Individual Report operations
 router.get('/:id', reportController.getReportById);

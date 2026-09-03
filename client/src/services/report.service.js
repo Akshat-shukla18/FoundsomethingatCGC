@@ -28,6 +28,19 @@ export const reportService = {
 
     const response = await api.get(`/search/found?${params.toString()}`);
     return response.data;
+  },
+
+  getMyReports: async (type) => {
+    const params = new URLSearchParams();
+    if (type) params.append('type', type);
+
+    const response = await api.get(`/reports/my?${params.toString()}`);
+    return response.data; // { items: [...] }
+  },
+
+  markResolved: async (id) => {
+    const response = await api.patch(`/reports/${id}`, { status: 'RESOLVED' });
+    return response.data; // { report: ... }
   }
 };
 

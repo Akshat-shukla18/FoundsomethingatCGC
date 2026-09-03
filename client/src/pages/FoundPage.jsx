@@ -12,12 +12,10 @@ export const FoundPage = () => {
   const { results, loading, loadingMore, error, hasMore, loadMore, search } = useSearch();
   const { isDark } = useTheme();
 
-  // Animation & Auth user state
-  const [isMounted, setIsMounted] = useState(false);
+  // Auth user state
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    setIsMounted(true);
     search({});
 
     const fetchUser = async () => {
@@ -32,22 +30,9 @@ export const FoundPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (loading && results.length === 0) return <Loading fullscreen />;
-  if (error && results.length === 0) return <ErrorState message={error} onRetry={() => search({})} />;
-
   return (
-    <div 
-      className={`min-h-screen transition-colors duration-700 ease-in-out ${
-        isDark 
-          ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950' 
-          : 'bg-slate-50'
-      }`}
-    >
-      <div 
-        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 transition-all duration-1000 ease-out transform ${
-          isMounted ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
-        }`}
-      >
+    <div className="min-h-screen bg-transparent">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 gap-6">
           <div className="space-y-2">
@@ -67,7 +52,7 @@ export const FoundPage = () => {
           
           <Link 
             to="/reports/create?type=FOUND"
-            className={`relative group flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+            className={`relative group flex items-center justify-center gap-2 px-6 py-3 rounded-full font-bold text-white transition-all duration-300 transform hover:scale-105 active:scale-95 ${
               isDark 
                 ? 'bg-indigo-600 border border-indigo-400/30 shadow-[0_0_20px_rgba(79,70,229,0.4)] hover:shadow-[0_0_30px_rgba(99,102,241,0.6)]' 
                 : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg'
@@ -79,15 +64,15 @@ export const FoundPage = () => {
         </div>
 
         {/* Search Bar Wrapper */}
-       <div 
-  className={`mb-8 p-3 md:p-4 rounded-3xl backdrop-blur-xl border transition-all duration-300 ${
-    isDark 
-      ? 'bg-slate-900/60 border-slate-800/60 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]' 
-      : 'bg-white/70 border-slate-200/60 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)]'
-  }`}
->
-  <SearchBar onSearch={search} />
-</div>
+        <div 
+          className={`mb-8 p-3 md:p-4 rounded-3xl backdrop-blur-xl border transition-all duration-300 ${
+            isDark 
+              ? 'bg-slate-900/60 border-slate-800/60 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]' 
+              : 'bg-white/70 border-slate-200/60 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)]'
+          }`}
+        >
+          <SearchBar onSearch={search} />
+        </div>
 
         {loading && results.length > 0 && (
           <div className={`mb-6 flex items-center gap-3 animate-pulse font-medium ${isDark ? 'text-indigo-300' : 'text-indigo-600'}`}>
@@ -99,7 +84,11 @@ export const FoundPage = () => {
         )}
 
         {/* Content Area */}
-        {results.length === 0 && !loading ? (
+        {loading && results.length === 0 ? (
+          <Loading />
+        ) : error && results.length === 0 ? (
+          <ErrorState message={error} onRetry={() => search({})} />
+        ) : results.length === 0 ? (
           <div className={`p-8 rounded-2xl border backdrop-blur-md transition-colors ${
             isDark ? 'border-indigo-900/30 bg-black/20' : 'border-slate-200 bg-white'
           }`}>
@@ -108,11 +97,10 @@ export const FoundPage = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {results.map((report, index) => (
+              {results.map((report) => (
                 <div 
                   key={report._id}
-                  className="group transform transition-all duration-500 ease-out hover:-translate-y-2"
-                  style={{ transitionDelay: `${index * 50}ms` }}
+                  className="group transform transition-all duration-300 hover:-translate-y-1.5"
                 >
                   <div className={`h-full rounded-2xl transition-all duration-300 ${
                     isDark 
@@ -131,7 +119,7 @@ export const FoundPage = () => {
                 <button 
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className={`group relative flex items-center justify-center min-w-[200px] px-8 py-3 rounded-full font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 ${
+                  className={`group relative flex items-center justify-center min-w-[200px] px-8 py-3 rounded-full font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed hover:-translate-y-1 cursor-pointer ${
                     isDark 
                       ? 'border border-indigo-500/30 text-indigo-300 bg-indigo-950/20 hover:bg-indigo-900/40 hover:border-indigo-400 hover:text-white hover:shadow-[0_0_20px_rgba(79,70,229,0.25)]' 
                       : 'border border-slate-300 text-slate-700 hover:bg-slate-100 hover:shadow-md'

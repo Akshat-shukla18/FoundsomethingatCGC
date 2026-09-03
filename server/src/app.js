@@ -25,8 +25,16 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Global rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
+  max: 5000, // allow 5000 requests per 15 minutes for seamless navigation & search
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: {
+      code: 'RATE_LIMIT_EXCEEDED',
+      message: 'Too many requests, please try again later.'
+    }
+  }
 });
 app.use('/api/', limiter);
 

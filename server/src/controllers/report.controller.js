@@ -179,10 +179,35 @@ const deleteReport = async (req, res, next) => {
   }
 };
 
+const getMyReports = async (req, res, next) => {
+  try {
+    const { type } = req.query;
+    const query = {
+      createdBy: req.session.userId,
+      status: { $in: ['ACTIVE', 'RESOLVED', 'CLAIM_PENDING'] }
+    };
+    if (type) query.reportType = type;
+
+    const reports = await Report.find(query)
+      .sort({ createdAt: -1 })
+      .populate('createdBy', 'name collegeEmail department rollNumber classSection');
+
+    res.status(200).json({
+      success: true,
+      data: {
+        items: reports
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createReport,
   getLostReports: getReports('LOST'),
   getFoundReports: getReports('FOUND'),
+  getMyReports,
   getReportById,
   updateReport,
   deleteReport

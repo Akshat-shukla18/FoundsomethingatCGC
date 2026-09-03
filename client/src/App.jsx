@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { Header } from './components/Header/Header';
 import { LostPage } from './pages/LostPage';
@@ -11,7 +11,27 @@ import { LandingPage } from './pages/LandingPage';
 import { ContactPage } from './pages/ContactPage';
 import { FeedbackPage } from './pages/FeedbackPage';
 import { HomePage } from './pages/HomePage';
+import { PageTransition } from './components/PageTransition/PageTransition';
 import LightRays from './components/LightRays/LightRays';
+
+const AnimatedRoutes = () => {
+  const location = useLocation();
+
+  return (
+    <Routes location={location} key={location.pathname}>
+      <Route path="/" element={<PageTransition><LandingPage /></PageTransition>} />
+      <Route path="/home" element={<PageTransition><HomePage /></PageTransition>} />
+      <Route path="/lost" element={<PageTransition><LostPage /></PageTransition>} />
+      <Route path="/found" element={<PageTransition><FoundPage /></PageTransition>} />
+      <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+      <Route path="/register" element={<PageTransition><RegisterPage /></PageTransition>} />
+      <Route path="/contact" element={<PageTransition><ContactPage /></PageTransition>} />
+      <Route path="/feedback" element={<PageTransition><FeedbackPage /></PageTransition>} />
+      <Route path="/reports/create" element={<PageTransition><ReportForm /></PageTransition>} />
+      <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />
+    </Routes>
+  );
+};
 
 const AppContent = () => {
   const { isDark } = useTheme();
@@ -39,19 +59,8 @@ const AppContent = () => {
       {/* Content on top of background */}
       <div className="relative z-10 flex flex-col min-h-screen">
         <Header />
-        <main className="flex-grow">
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/lost" element={<LostPage />} />
-            <Route path="/found" element={<FoundPage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/feedback" element={<FeedbackPage />} />
-            <Route path="/reports/create" element={<ReportForm />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-          </Routes>
+        <main className="flex-grow flex flex-col">
+          <AnimatedRoutes />
         </main>
       </div>
     </div>
